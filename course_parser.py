@@ -64,7 +64,7 @@ class Parser(object):
         course_nodes = table_node.find_all('tr')
         # 使用selenium时要用
         # course_nodes = table_node.find('tbody').find_all('tr')
-        # 奇怪的bug
+        # 因为用浏览器打开HTML和实际的格式不一样,奇怪的bug
         del course_nodes[0]
         courses = []
         for course_node in course_nodes:
