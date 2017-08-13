@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from bs4 import BeautifulSoup
-import time
 
 # 格式化输出,解决Unicode字符站2个ascii字符宽度
+
 def format_print(my_str, width=40):
     real_width = 0
     for i in my_str:
@@ -49,9 +49,9 @@ class Parser(object):
         titles = []
         for title in titles_node:
             titles.append(title.string.strip())
+        # [课程名, 学分, 课程属性, 成绩, 未通过原因]
         titles = [titles[2], titles[4], titles[5], titles[6], titles[7]]
         return titles
-
 
     def get_course_datas(self, table_node):
         def parse_data(data_node):
@@ -61,7 +61,11 @@ class Parser(object):
             else:
                 return child_node[1].string.strip()
 
-        course_nodes = table_node.find('tbody').find_all('tr')
+        course_nodes = table_node.find_all('tr')
+        # 使用selenium时要用
+        # course_nodes = table_node.find('tbody').find_all('tr')
+        # 奇怪的bug
+        del course_nodes[0]
         courses = []
         for course_node in course_nodes:
             # 解析数据
@@ -70,17 +74,72 @@ class Parser(object):
             courses.append(course)
         return courses
 
-    def output(self):
-        title = self.get_title()
-        table_node = self.get_table_node()
-        table_titles = self.get_table_head(table_node)
-        courses = self.get_course_datas(table_node)
+    def output_titles(self, table_titles):
         for i in range(len(table_titles)):
             if i == 0:
                 format_print(table_titles[i], 40)
             else:
                 format_print(table_titles[i], 10)
         print
+
+    def get_grade_piont(self, grade):
+        if grade >= 95:
+            return 4.0
+        if grade >= 90:
+            return 3.8
+        if grade >= 85:
+            return 3.6
+        if grade >= 80:
+            return 3.2
+        if grade >= 75:
+            return 2.7
+        if grade >= 70:
+            return 2.2
+        if grade >= 65:
+            return 1.7
+        if grade >= 60:
+            return 1.0
+        if grade < 60:
+            return 0.0
+
+    def get_GPA(self, credits, scores):
+        total_credits = 0
+        # 绩点*学分的和
+        product_sum = 0
+        for i in range(len(credits)):
+            total_credits += credits[i]
+            product_sum += self.get_grade_piont(scores[i]) * credits[i]
+
+        return product_sum / total_credits
+
+    def get_average(self, credits, scores):
+        total_credits = 0
+        # 学分*分数的和
+        product_sum = 0
+        for i in range(len(credits)):
+            total_credits += credits[i]
+            product_sum += credits[i] * scores[i]
+        return product_sum / total_credits
+
+    def output_courses_info(self, courses):
         for course in courses:
             course.show()
+        # GPA,average
+        credits = map(lambda x: float(x.credit), courses)
+        scores = map(lambda x: float(x.score), courses)
+        GPA = self.get_GPA(credits, scores)
+        average = self.get_average(credits, scores)
+        print '............................................'
+        print u'GPA:', GPA
+        print u'平均分:', average
+
+    def output(self):
+        title = self.get_title()
+        table_node = self.get_table_node()
+        table_titles = self.get_table_head(table_node)
+        courses = self.get_course_datas(table_node)
+        print '............................................'
+        print title
+        self.output_titles(table_titles)
+        self.output_courses_info(courses)
 
