@@ -13,8 +13,6 @@ class SCU(object):
         print('正在登录...')
         self.has_logined = False
 
-    # 使用cookie登录,获取成绩页面
-
     def login(self):
         s = requests.Session()
         form_data = {
@@ -38,9 +36,9 @@ class SCU(object):
         page = self.get_score_page()
         if page is not None:
             parser = Parser(page)
-            return parser.output()
+            parser.output()
         else:
-            return '解析失败'
+            print('解析失败')
 
 
 if __name__ == '__main__':
